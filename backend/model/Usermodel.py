@@ -6,3 +6,7 @@ class User(Document):
     email = EmailField(required=True)
     password = StringField(required=True)
     local_of = StringField(required=True)
+    DOB = StringField(required=True)
+    phone = StringField(required=True)
+    gender = StringField(required=True)
+    
