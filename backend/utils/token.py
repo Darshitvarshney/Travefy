@@ -23,7 +23,6 @@ def generate_token(User):
 
 
 
-
 def token_user_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -33,14 +32,19 @@ def token_user_required(f):
         try:
             token = auth_header.split(" ")[1] if " " in auth_header else auth_header
             data = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            User = User.objects(id=data["_id"]).first()
-            if not User:
-                return jsonify({"message": "Admin not found", "status": 404}), 404
-            request.User = User
+            
+            # Don't shadow the class name
+            user = User.objects(id=data["_id"]).first()
+            if not user:
+                return jsonify({"message": "User not found", "status": 404}), 404
+            
+            request.User = user  # attach the user to the request
         except Exception as e:
             return jsonify({"message": "Invalid or expired token", "status": 401, "error": str(e)}), 401
+        
         return f(*args, **kwargs)
     return decorated
+
 
 
 

@@ -33,7 +33,7 @@ def register_User():
             return jsonify({"message": "Email already registered", "status": 400, "data": ""}), 400
 
         hashed_password = generate_password_hash(password)
-        new_User = User(name = name ,email=email, password=hashed_password, local_of=local_of)
+        new_User = User(name = name ,email=email, password=hashed_password, local_of=local_of, DOB=DOB, phone=phone,gender=gender)
         new_User.save()
         token = generate_token(new_User)
         return jsonify({
@@ -104,11 +104,8 @@ def consent_location():
     except Exception as e:
         return jsonify({"message": "Error in recording consent", "status": 500, "error": str(e)}), 500
     
-
-
 @User_bp.route('/Update_Profile', methods=['PUT'])
-@token_user_required
-def update_profile():
+def Update_Profile():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -119,9 +116,11 @@ def update_profile():
 
         if not user_id:
             return jsonify({"message": "User ID is required", "status": 400, "data": ""}), 400
+
         user = User.objects(id=user_id).first()
         if not user:
             return jsonify({"message": "User not found", "status": 404, "data": ""}), 404
+
         if name:
             user.name = name    
         if local_of:
@@ -130,7 +129,20 @@ def update_profile():
             user.DOB = DOB  
         if phone:
             user.phone = phone
+
         user.save()
-        return jsonify({"message": "Profile updated successfully", "status": 200, "data": ""}), 200
+        return jsonify({
+            "message": "Profile updated successfully",
+            "status": 200,
+            "data": {
+                "id": str(user.id),
+                "name": user.name,
+                "email": user.email,
+                "local_of": user.local_of,
+                "DOB": user.DOB,
+                "phone": user.phone,
+                "gender": user.gender
+            }
+        }), 200
     except Exception as e:
         return jsonify({"message": "Error in updating profile", "status": 500, "error": str(e)}), 500
