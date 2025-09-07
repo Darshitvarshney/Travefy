@@ -34,13 +34,13 @@ def otp_send():
             server = smtplib.SMTP("smtp.gmail.com", 587)
             server.starttls()
             server.login(sender_email, sender_password)
-            message = f"""From: Valutify Team <{sender_email}>
+            message = f"""From: Travefy Team <{sender_email}>
     To: {email}
-    Subject: Your One-Time Password (OTP) for Valutify
+    Subject: Your One-Time Password (OTP) for Travefy
 
     Hello,
 
-    We received a request to generate an OTP for your Valutify account. 
+    We received a request to generate an OTP for your Travefy account. 
     Your One-Time Password (OTP) is:
 
         {otp_code}
@@ -49,7 +49,7 @@ def otp_send():
     If you did not request this, please ignore this email.
 
     Thank you,
-    The Valutify Team
+    The Travefy Team
     """
             server.sendmail(sender_email, receiver_email, message)
             server.quit()
