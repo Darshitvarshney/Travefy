@@ -33,12 +33,12 @@ def token_user_required(f):
             token = auth_header.split(" ")[1] if " " in auth_header else auth_header
             data = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
             
-            # Don't shadow the class name
+    
             user = User.objects(id=data["_id"]).first()
             if not user:
                 return jsonify({"message": "User not found", "status": 404}), 404
             
-            request.User = user  # attach the user to the request
+            request.user = user  
         except Exception as e:
             return jsonify({"message": "Invalid or expired token", "status": 401, "error": str(e)}), 401
         

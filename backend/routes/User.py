@@ -105,6 +105,7 @@ def consent_location():
         return jsonify({"message": "Error in recording consent", "status": 500, "error": str(e)}), 500
     
 @User_bp.route('/Update_Profile', methods=['PUT'])
+@token_user_required
 def Update_Profile():
     try:
         data = request.get_json()
