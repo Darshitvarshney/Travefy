@@ -56,7 +56,7 @@ def otp_send():
 
             hashed_otp = generate_password_hash(otp_code)
             expiry_time = datetime.utcnow() + timedelta(minutes=10)
-
+            OTPModel.objects(email=receiver_email).delete()
             email_otp = OTPModel(email=receiver_email, otp=hashed_otp, expiry_time=expiry_time)
             email_otp.save()
 
