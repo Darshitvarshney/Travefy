@@ -67,7 +67,7 @@ def otp_send():
     except Exception as e:
         return jsonify({"message": "Error in sending OTP", "status": 500, "error": str(e)}), 500
 
-@otp_bp.route('/verify_otp', methods=['GET'])
+@otp_bp.route('/verify_otp', methods=['POST'])
 def verify_otp():
     try:
         data = request.get_json()
