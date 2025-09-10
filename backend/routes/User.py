@@ -2,9 +2,10 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import re 
 
-from backend.model.Usermodel import User
+from backend.model.Usermodel import User,Log,Curr_log
 from backend.model.consentmodel import location
 from backend.utils.token import generate_token, token_user_required
+from datetime import datetime, timedelta
 
 User_bp = Blueprint('User', __name__)
 @User_bp.route('/register', methods=['POST'])
@@ -147,3 +148,53 @@ def Update_Profile():
         }), 200
     except Exception as e:
         return jsonify({"message": "Error in updating profile", "status": 500, "error": str(e)}), 500
+
+@User_bp.route('/Travel_Log', methods=['POST'])
+def Travel_Log():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        place = data.get('place')
+        rating = data.get('rating')
+        review = data.get('review')
+        photos = data.get('photos', [])
+        expense = data.get('expense')
+        time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+        if not user_id or not place or not rating:
+            return jsonify({
+                "message": "User ID, place, and rating are required",
+                "status": 400,
+                "data": ""
+            }), 400
+
+
+        user = User.objects(id=user_id).first()
+        if not user:
+            return jsonify({"message": "User not found", "status": 404, "data": ""}), 404
+
+        new_log_entry = {
+            "place": place,
+            "rating": rating,
+            "review": review,
+            "photos": photos,
+            "expense": expense,
+            "time": time
+        }
+
+        if not user.log:
+            user.log.append(Log(curr_log=[]))
+
+        current_log = user.log[-1]
+
+        if not current_log.curr_log:
+            current_log.curr_log = []
+
+        current_log.curr_log.append(Curr_log(**new_log_entry))
+
+        user.save()
+
+
+        return jsonify({"message": "Travel log updated successfully", "status": 200, "data": ""}), 200
+    except Exception as e:
+        return jsonify({"message": "Error in updating travel log", "status": 500, "error": str(e)}), 500
