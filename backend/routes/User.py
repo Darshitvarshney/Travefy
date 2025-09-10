@@ -198,3 +198,87 @@ def Travel_Log():
         return jsonify({"message": "Travel log updated successfully", "status": 200, "data": ""}), 200
     except Exception as e:
         return jsonify({"message": "Error in updating travel log", "status": 500, "error": str(e)}), 500
+    
+
+@User_bp.route('/User_Existence', methods=['GET'])
+def User_Existence():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        if not email:
+            return jsonify({"message": "Email parameter is required", "status": 400, "data": ""}), 400
+
+        user = User.objects(email=email).first()
+        if user:
+            return jsonify({
+            "message": "User Exist",
+            "status": 200,
+            "data": {
+                "id": str(user.id),
+                "name": user.name,
+                "email": user.email
+            }
+        }), 200
+        else:
+            return jsonify({"message": "User does not exist", "status": 404, "data": {"exists": False}}), 404
+    except Exception as e:
+        return jsonify({"message": "Error in checking user existence", "status": 500, "error": str(e)}), 500
+    
+
+    
+@User_bp.route('/Password_Change', methods=['PUT'])
+def Password_Change():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        if not user_id or not new_password or not confirm_password:
+            return jsonify({
+                "message": "user_id, new_password, and confirm_password are required",
+                "status": 400,
+                "data": ""
+            }), 400
+
+        user = User.objects(id=user_id).first()
+        if not user:
+            return jsonify({"message": "User not found", "status": 404, "data": ""}), 404
+
+        if new_password != confirm_password:
+            return jsonify({
+                "message": "New password and confirm password do not match",
+                "status": 400,
+                "data": ""
+            }), 400
+
+        # ✅ Fix: check if new password matches old
+        if check_password_hash(user.password, new_password):
+            return jsonify({
+                "message": "New password cannot be the same as the old password",
+                "status": 400,
+                "data": ""
+            }), 400
+
+        if len(new_password) < 6:
+            return jsonify({
+                "message": "New password must be at least 6 characters long",
+                "status": 400,
+                "data": ""
+            }), 400
+
+        user.password = generate_password_hash(new_password)
+        user.save()
+
+        return jsonify({
+            "message": "Password changed successfully",
+            "status": 200,
+            "data": ""
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "message": "Error in changing password",
+            "status": 500,
+            "error": str(e)
+        }), 500

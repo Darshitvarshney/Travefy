@@ -35,22 +35,23 @@ def otp_send():
             server.starttls()
             server.login(sender_email, sender_password)
             message = f"""From: Travefy Team <{sender_email}>
-    To: {email}
-    Subject: Your One-Time Password (OTP) for Travefy
+            To: {email}
+            Subject: Your One-Time Password (OTP) for Travefy
 
-    Hello,
+            Hello,
 
-    We received a request to generate an OTP for your Travefy account. 
-    Your One-Time Password (OTP) is:
+            We received a request to generate an OTP for your Travefy account. 
+            Your One-Time Password (OTP) is:
 
-        {otp_code}
+                {otp_code}
 
-    Please use this OTP within the next 10 minutes. 
-    If you did not request this, please ignore this email.
+            Please use this OTP within the next 10 minutes. 
+            If you did not request this, please ignore this email.
 
-    Thank you,
-    The Travefy Team
-    """
+            Thank you,
+            The Travefy Team
+            """
+
             server.sendmail(sender_email, receiver_email, message)
             server.quit()
 
