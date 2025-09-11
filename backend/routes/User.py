@@ -5,7 +5,7 @@ import re
 from backend.model.Usermodel import User,Log,Curr_log
 from backend.model.consentmodel import location
 from backend.utils.token import generate_token, token_user_required
-from datetime import datetime, timedelta
+from datetime import datetime
 
 User_bp = Blueprint('User', __name__)
 @User_bp.route('/register', methods=['POST'])
@@ -148,6 +148,20 @@ def Update_Profile():
         }), 200
     except Exception as e:
         return jsonify({"message": "Error in updating profile", "status": 500, "error": str(e)}), 500
+    
+@User_bp.route('Log_Page', methods=['POST'])
+def Log_Page():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        user = User.objects(id=user_id).first()
+        user.log.append(Log(curr_log=[]))
+        user.save()
+        return jsonify({"message": "Travel log Created successfully", "status": 200, "data": ""}), 200
+    except Exception as e:
+        return jsonify({"message": "Error in making travel log", "status": 500, "error": str(e)}), 500
+
+
 
 @User_bp.route('/Travel_Log', methods=['POST'])
 def Travel_Log():
@@ -252,7 +266,7 @@ def Password_Change():
                 "data": ""
             }), 400
 
-        # ✅ Fix: check if new password matches old
+    
         if check_password_hash(user.password, new_password):
             return jsonify({
                 "message": "New password cannot be the same as the old password",

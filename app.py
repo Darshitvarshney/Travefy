@@ -6,6 +6,7 @@ import os
 
 from backend.routes.User import User_bp
 from backend.routes.otp import otp_bp
+from backend.routes.chatbot import chatbot_bp
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +20,7 @@ connect(host=mongo_uri)
 
 app.register_blueprint(User_bp, url_prefix="/api/User")
 app.register_blueprint(otp_bp, url_prefix="/api/otp")
+app.register_blueprint(chatbot_bp, url_prefix="/api/chatbot")
 
 @app.route("/api/health", methods=["GET"])
 def index():
