@@ -64,6 +64,7 @@ def login():
             return jsonify({"message": "Invalid email format", "status": 400, "data": ""}), 400
 
         user = User.objects(email=email).first()
+
         if not user or not check_password_hash(user.password, password):
             return jsonify({"message": "Invalid email or password", "status": 401, "data": ""}), 401
 
@@ -175,6 +176,7 @@ def Travel_Log():
         photos = data.get('photos', [])
         expense = data.get('expense')
         time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        date = data.get('date')
 
         if not user_id or not place:
             return jsonify({
@@ -195,7 +197,8 @@ def Travel_Log():
             "photos": photos,
             "expense": expense,
             "time": time,
-            "mode_of_tavel": mode_of_travel
+            "mode_of_tavel": mode_of_travel,
+            "date": date
         }
 
         if not user.log:
@@ -298,3 +301,42 @@ def Password_Change():
             "status": 500,
             "error": str(e)
         }), 500
+    ############################################################
+@User_bp.route('/Get_Travel_Log', methods=['GET'])
+def Get_Travel_Log():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        if not user_id:
+            return jsonify({"message": "User ID is required", "status": 400, "data": ""}), 400
+
+        user = User.objects(id=user_id).first()
+        if not user:
+            return jsonify({"message": "User not found", "status": 404, "data": ""}), 404
+
+        travel_logs = []
+        for log in user.log:
+            log_entries = []
+            for entry in log.curr_log:
+                log_entries.append({
+                    "place": entry.place,
+                    "rating": entry.rating,
+                    "review": entry.review,
+                    "photos": entry.photos,
+                    "expense": entry.expense,
+                    "time": entry.time,
+                    "mode_of_travel": entry.mode_of_travel  
+                })
+            travel_logs.append({
+                "log_id": str(log.id),
+                "curr_log": log_entries
+            })
+
+        return jsonify({
+            "message": "Travel logs retrieved successfully",
+            "status": 200,
+            "data": travel_logs
+        }), 200
+
+    except Exception as e:
+        return jsonify({"message": "Error in retrieving travel logs", "status": 500, "error": str(e)}), 500

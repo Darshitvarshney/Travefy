@@ -8,7 +8,7 @@ class Curr_log(EmbeddedDocument):
     photos = ListField(StringField())
     expense = StringField()
     time = StringField(required=True)
-
+    date = StringField()
 
 class Log(EmbeddedDocument):
     curr_log = ListField(EmbeddedDocumentField(Curr_log))
