@@ -169,13 +169,14 @@ def Travel_Log():
         data = request.get_json()
         user_id = data.get('user_id')
         place = data.get('place')
+        mode_of_travel = data.get('mode_of_travel')
         rating = data.get('rating')
         review = data.get('review')
         photos = data.get('photos', [])
         expense = data.get('expense')
         time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-        if not user_id or not place or not rating:
+        if not user_id or not place:
             return jsonify({
                 "message": "User ID, place, and rating are required",
                 "status": 400,
@@ -193,7 +194,8 @@ def Travel_Log():
             "review": review,
             "photos": photos,
             "expense": expense,
-            "time": time
+            "time": time,
+            "mode_of_tavel": mode_of_travel
         }
 
         if not user.log:
