@@ -48,7 +48,13 @@ def chat():
             return jsonify({"error": res.get("error", "No candidates in response")}), 500
 
         reply = res["candidates"][0]["content"]["parts"][0]["text"]
-        return jsonify({'reply': reply}), 200
+
+        return jsonify({'reply': reply,"status":200,"data":""}), 200
+    #     return jsonify({
+    #     "message": "Chatbot response",
+    #     "status": 200,
+    #     "data": reply
+    # }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
