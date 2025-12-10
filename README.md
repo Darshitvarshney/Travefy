@@ -69,6 +69,12 @@ Add input validation / error handling / logging for more robust backend
 
 Improve UI/UX — add interactive maps, date pickers, drag-and-drop itinerary editing, etc.
 
+## API Documentation  
+
+You can explore the full API documentation for this project in Postman:  
+[Open Travefy API Docs on Postman](https://www.postman.com/darshitvarshney-8750718/workspace/notesapp/documentation/47681806-43ab610e-a4fd-45b7-acd6-3a8ba61c65f3)  
+
+
 📝 Contributing
 
 Contributions are welcome. You can:
