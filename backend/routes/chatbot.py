@@ -1,56 +1,75 @@
+# import os
 # import requests
 # from flask import Blueprint, request, jsonify
 # from dotenv import load_dotenv
-# import os
+# from backend.model.chatbotmodel import ChatSession, ChatHistory
+# from mongoengine import connect
 
 # load_dotenv()
 
-# chatbot_bp = Blueprint('chatbot', __name__)
+# # Connect to MongoDB (adjust URI if needed)
+# MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/chatbot_db")
+# connect(host=MONGO_URI)
 
 # API_KEY = os.getenv("GEMINI_API_KEY")
+# MODEL_NAME = "gemini-2.0"  # safest choice
 
-# @chatbot_bp.route('/chat', methods=['POST'])
+# chatbot_bp = Blueprint("chatbot", __name__)
+
+# @chatbot_bp.route("/chat", methods=["POST"])
 # def chat():
-#     data = request.json
-#     user_message_raw = data.get('message')
-#     prefix = """You are a helpful **travel assistant**. 
-#     - You only answer questions related to **travel, tourism, locations, weather, transportation, hotels, and travel tips**. 
-#     - If the question is unrelated to travel, reply with : 
-#     "I’m a travel assistant and can only help with travel-related queries." - Provide concise and relevant information.
-#     - Priporitize the palaces of India 
-#     - Don't ask questions from user just answer their ques straight away. 
-#     - Use bullet points or numbered lists for clarity where appropriate. 
-#     - If the user asks for recommendations, provide 3-5 options with brief descriptions. 
-#     - If the user asks for travel itineraries, suggest a 3-5 day plan with key activities and sights. 
-#     - If the user asks about travel safety, provide up-to-date tips and advice.
-# """
-#     suffix = " Answer in brief and points rather than paragraphs by deafault unless asked for detailed explanation."
-#     user_message = prefix + user_message_raw + suffix
-
+#     data = request.json or {}
+#     user_message = (data.get("message") or "").strip()
+#     session_id = data.get("session_id", "default_session")
 
 #     if not user_message:
-#         return jsonify({'error': 'Message is required'}), 400
+#         return jsonify({"error": "Message is required"}), 400
+
+#     # Get or create session
+#     session = ChatSession.objects(session_id=session_id).first()
+#     if not session:
+#         session = ChatSession(session_id=session_id).save()
+
+#     # Append user message to history
+#     history_entry = ChatHistory(user_message=user_message, bot_reply="")
+#     session.history.append(history_entry)
+#     session.save()
+
+#     # Prepare Gemini API messages
+#     messages = [{"role": "system", "content": session.system_message}]
+#     for h in session.history:
+#         if h.user_message:
+#             messages.append({"role": "user", "content": h.user_message})
+#         if h.bot_reply:
+#             messages.append({"role": "assistant", "content": h.bot_reply})
+
+#     payload = {
+#         "messages": messages,
+#         "temperature": 0.7,
+#         "candidate_count": 1
+#     }
+
+#     gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateMessage?key={API_KEY}"
+#     headers = {"Content-Type": "application/json"}
 
 #     try:
-#         gemini_model = "models/gemini-1.5-flash-8b"
-#         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={API_KEY}"
+#         response = requests.post(gemini_url, headers=headers, json=payload)
+#         response.raise_for_status()
+#         res = response.json()
 
-#         payload = {
-#             "contents": [
-#                 {"parts": [{"text": user_message}]}
-#             ]
-#         }
+#         if "candidates" not in res or not res["candidates"]:
+#             return jsonify({"error": "No candidates in response"}), 500
 
-#         res = requests.post(gemini_url, json=payload).json()
+#         reply = res["candidates"][0]["content"][0]["text"]
 
-#         if "candidates" not in res:
-#             return jsonify({"error": res.get("error", "No candidates in response")}), 500
+#         # Update last history entry with bot reply
+#         session.history[-1].bot_reply = reply
+#         session.save()
 
-#         reply = res["candidates"][0]["content"]["parts"][0]["text"]
+#         return jsonify({"reply": reply, "session_id": session.session_id}), 200
 
-#         return jsonify({'reply': reply,"status":200,"data":""}), 200
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
+#     except requests.exceptions.RequestException as e:
+#         return jsonify({"error": str(e)}), 500
 
 
 

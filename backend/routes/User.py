@@ -197,7 +197,7 @@ def Travel_Log():
             "photos": photos,
             "expense": expense,
             "time": time,
-            "mode_of_tavel": mode_of_travel,
+            "mode_of_travel": mode_of_travel,
             "date": date
         }
 
@@ -302,35 +302,52 @@ def Password_Change():
             "error": str(e)
         }), 500
     ############################################################
+from bson import ObjectId
+from bson.errors import InvalidId
+
 @User_bp.route('/Get_Travel_Log', methods=['GET'])
 def Get_Travel_Log():
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        if not user_id:
-            return jsonify({"message": "User ID is required", "status": 400, "data": ""}), 400
+        user_id = request.args.get("user_id", "").strip()
 
-        user = User.objects(id=user_id).first()
+        if not user_id:
+            return jsonify({
+                "message": "User ID is required",
+                "status": 400,
+                "data": ""
+            }), 400
+
+        try:
+            user_object_id = ObjectId(user_id)
+        except InvalidId:
+            return jsonify({
+                "message": "Invalid user ID format",
+                "status": 400,
+                "data": ""
+            }), 400
+
+        user = User.objects(id=user_object_id).first()
         if not user:
-            return jsonify({"message": "User not found", "status": 404, "data": ""}), 404
+            return jsonify({
+                "message": "User not found",
+                "status": 404,
+                "data": ""
+            }), 404
 
         travel_logs = []
         for log in user.log:
-            log_entries = []
+            entries = []
             for entry in log.curr_log:
-                log_entries.append({
+                entries.append({
                     "place": entry.place,
                     "rating": entry.rating,
                     "review": entry.review,
                     "photos": entry.photos,
                     "expense": entry.expense,
                     "time": entry.time,
-                    "mode_of_travel": entry.mode_of_travel  
+                    "mode_of_travel": getattr(entry, "mode_of_travel", None)
                 })
-            travel_logs.append({
-                "log_id": str(log.id),
-                "curr_log": log_entries
-            })
+            travel_logs.append({"curr_log": entries})
 
         return jsonify({
             "message": "Travel logs retrieved successfully",
@@ -339,4 +356,8 @@ def Get_Travel_Log():
         }), 200
 
     except Exception as e:
-        return jsonify({"message": "Error in retrieving travel logs", "status": 500, "error": str(e)}), 500
+        return jsonify({
+            "message": "Error in retrieving travel logs",
+            "status": 500,
+            "error": str(e)
+        }), 500

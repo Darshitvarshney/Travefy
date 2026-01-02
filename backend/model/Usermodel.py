@@ -2,7 +2,7 @@ from mongoengine import StringField, EmailField, ListField, EmbeddedDocumentFiel
 
 class Curr_log(EmbeddedDocument):
     place = StringField(required=True)
-    mode_of_tavel = StringField()
+    mode_of_travel = StringField()
     rating = StringField()
     review = StringField()
     photos = ListField(StringField())
