@@ -84,60 +84,112 @@ chatbot_bp = Blueprint('chatbot', __name__)
 
 API_KEY = os.getenv("GEMINI_API_KEY")
 
+# @chatbot_bp.route('/chat', methods=['POST'])
+# def chat():
+#     data = request.json
+#     user_message_raw = data.get('message')
+#     prefix = """You are a professional travel assistant. 
+# - Only answer questions related to travel, tourism, destinations, weather, transportation, hotels, and travel tips. 
+# - If the question is unrelated to travel, respond with: 
+#   "I’m a travel assistant and can only help with travel-related queries."
+# - Prioritize highlighting the palaces of India when relevant. 
+# - Provide direct answers without asking follow-up questions. 
+# - Use bullet points or numbered lists for clarity where appropriate. 
+# - For recommendations, provide 3–5 options with brief descriptions. 
+# - For itineraries, suggest concise 3–5 day plans with key activities and sights. 
+# - For travel safety, provide up-to-date, practical advice.
+# """
+
+#     suffix = " Answer in brief and points rather than paragraphs by default unless asked for detailed explanation."
+#     user_message = prefix + (user_message_raw or "") + suffix
+
+#     if not user_message_raw:
+#         return jsonify({'error': 'Message is required'}), 400
+
+#     try:
+#         gemini_model = "models/gemini-2.0-flash"  # example — replace with your valid model
+#         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/{gemini_model}:generateContent?key={API_KEY}"
+
+
+#         headers = {
+#             "Content-Type": "application/json"
+#         }
+
+#         payload = {
+#             "contents": [
+#                 {"parts": [{"text": user_message}]}
+#             ]
+#         }
+
+#         response = requests.post(gemini_url, headers=headers, json=payload)
+
+#         # Debugging: print raw response if not JSON
+#         try:
+#             res = response.json()
+#         except Exception:
+#             return jsonify({
+#                 "error": "Non-JSON response from Gemini API",
+#                 "raw_response": response.text
+#             }), 500
+
+#         if "candidates" not in res:
+#             return jsonify({"error": res.get("error", "No candidates in response")}), 500
+
+#         reply = res["candidates"][0]["content"]["parts"][0]["text"]
+
+#         return jsonify({'reply': reply, "status": 200, "data": ""}), 200
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+
+
 @chatbot_bp.route('/chat', methods=['POST'])
 def chat():
     data = request.json
     user_message_raw = data.get('message')
-    prefix = """You are a professional travel assistant. 
-- Only answer questions related to travel, tourism, destinations, weather, transportation, hotels, and travel tips. 
-- If the question is unrelated to travel, respond with: 
-  "I’m a travel assistant and can only help with travel-related queries."
-- Prioritize highlighting the palaces of India when relevant. 
-- Provide direct answers without asking follow-up questions. 
-- Use bullet points or numbered lists for clarity where appropriate. 
-- For recommendations, provide 3–5 options with brief descriptions. 
-- For itineraries, suggest concise 3–5 day plans with key activities and sights. 
-- For travel safety, provide up-to-date, practical advice.
-"""
-
-    suffix = " Answer in brief and points rather than paragraphs by default unless asked for detailed explanation."
-    user_message = prefix + (user_message_raw or "") + suffix
 
     if not user_message_raw:
         return jsonify({'error': 'Message is required'}), 400
 
+    prefix = (
+        "You are a travel assistant. "
+        "Answer only travel-related questions. "
+        "Use bullet points. "
+        "If unrelated, say you only handle travel queries. "
+        "Provide direct answers without asking follow-up questions."
+    )
+
+    user_message = prefix + user_message_raw
+
     try:
-        gemini_model = "models/gemini-2.0-flash"  # example — replace with your valid model
+        gemini_model = "models/gemini-2.0-flash"
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/{gemini_model}:generateContent?key={API_KEY}"
 
-
-        headers = {
-            "Content-Type": "application/json"
-        }
-
         payload = {
-            "contents": [
-                {"parts": [{"text": user_message}]}
-            ]
+            "contents": [{"parts": [{"text": user_message}]}]
         }
 
-        response = requests.post(gemini_url, headers=headers, json=payload)
+        response = requests.post(
+            gemini_url,
+            headers={"Content-Type": "application/json"},
+            json=payload,
+            timeout=15
+        )
 
-        # Debugging: print raw response if not JSON
-        try:
-            res = response.json()
-        except Exception:
+        if response.status_code == 429:
             return jsonify({
-                "error": "Non-JSON response from Gemini API",
-                "raw_response": response.text
-            }), 500
+                "message": "AI travel assistant is temporarily unavailable. Please try again later.",
+                "status": 429
+            }), 429
+
+        res = response.json()
 
         if "candidates" not in res:
-            return jsonify({"error": res.get("error", "No candidates in response")}), 500
+            return jsonify({"error": res}), 500
 
         reply = res["candidates"][0]["content"]["parts"][0]["text"]
 
-        return jsonify({'reply': reply, "status": 200, "data": ""}), 200
+        return jsonify({'reply': reply, 'status': 200}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
